@@ -23,6 +23,7 @@ public class Script_PlayerController : MonoBehaviour
     [SerializeField] float _jumpSpeed = 5f;
     [SerializeField] float _jumpCoolDown = 0.25f;
     [SerializeField] float _rotateSpeed = 1f;
+    [SerializeField] Transform _center = null;
 
     Vector3 _velocity = Vector3.zero;
     Vector3 _velocityBuffer = Vector3.zero;
@@ -112,6 +113,15 @@ public class Script_PlayerController : MonoBehaviour
             _jumpCoolDownCount = 0f;
 
             _animator.SetTrigger("Jump");
+        }
+
+        Vector3 XZ = _velocity;
+        XZ.y = 0f;
+
+        if (Physics.SphereCast(_center.position, _landCheckRadius, XZ.normalized, out RaycastHit hit,
+            1f, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerShift))
+        {
+            _velocity = hit.normal;
         }
 
         transform.Rotate(_eulerBuffer);
