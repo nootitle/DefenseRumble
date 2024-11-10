@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -8,6 +9,12 @@ public class Script_PlayerController : MonoBehaviour
     [Header("General")]
     [SerializeField] Rigidbody _rigidBody = null;
     [SerializeField] Animator _animator = null;
+
+    state _state = state.normal;
+
+    public enum state { normal, run, fire, reload }
+
+    Coroutine _stateChangeCo = null;
 
     [Header("Movement")]
     [SerializeField] float _landCheckRadius = 0.25f;
@@ -29,12 +36,12 @@ public class Script_PlayerController : MonoBehaviour
     [Header("Weapon")]
     [SerializeField] Transform _rightHand = null;
     [SerializeField] Transform _leftHand = null;
+    [SerializeField] float _grabRadius_Weapon = 2f;
+    [SerializeField] Script_Weapon _weapon = null;
 
     [Header("Sound")]
     [SerializeField] AudioSource _audioSource = null;
     [SerializeField] List<AudioClip> _footStepSE = null;
-
-    int _staticLayer = 1 << 10;
 
     void Start()
     {
@@ -44,6 +51,7 @@ public class Script_PlayerController : MonoBehaviour
     void Update()
     {
         Move();
+        MouseButton();
     }
 
     void Init()
@@ -57,7 +65,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void Move()
     {
-        _isGround = Physics.CheckSphere(this.transform.position, _landCheckRadius, _staticLayer);
+        _isGround = Physics.CheckSphere(this.transform.position, _landCheckRadius, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerShift);
 
         if (_isGround)
         {
@@ -118,19 +126,137 @@ public class Script_PlayerController : MonoBehaviour
         }
     }
 
+    void MouseButton()
+    {
+        if(Input.GetButtonDown("Fire1"))
+        {
+            if (_weapon == null)
+                Weapon_Get();
+            else
+                Weapon_Use();
+        }
+        else if (Input.GetButton("Fire1"))
+        {
+            if (_weapon != null)
+                Weapon_Use();
+        }
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Weapon_Discard();
+        }
+    }
+
     void Weapon_Get()
     {
+        Collider[] weapons = Physics.OverlapSphere(RightHand().position, _grabRadius_Weapon, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.weapon).layerShift);
 
+        foreach (Collider w in weapons)
+        {
+            Script_Weapon SC = w.GetComponent<Script_Weapon>();
+
+            if (SC != null)
+            {
+                _weapon = SC;
+                SC.Get();
+
+                StateUpdate(state.run);
+            }
+        }
     }
 
     void Weapon_Discard()
     {
+        if (_weapon == null) return;
 
+        _weapon.Discard();
+        _weapon = null;
+
+        StateUpdate(state.normal);
     }
 
     void Weapon_Use()
     {
+        StateUpdate(state.fire);
 
+        _weapon.Use();
+    }
+
+    void StateUpdate(state newState)
+    {
+        switch(newState)
+        {
+            case state.normal:
+                {
+                    CorutineForStateChange(0.15f, 0f, 0f);
+                    break;
+                }
+            case state.run:
+                {
+                    CorutineForStateChange(1f, 0.33f, 0f);
+                    break;
+                }
+            case state.fire:
+                {
+                    _animator.SetFloat("IdleState", 0.66f);
+                    _animator.SetFloat("MoveState", 0.66f);
+                    CorutineForStateChange(1f, 0.33f, 0.15f);
+                    break;
+                }
+            case state.reload:
+                {
+                    _animator.SetFloat("IdleState", 1f);
+                    _animator.SetFloat("MoveState", 1f);
+                    CorutineForStateChange(1f, 0.33f, 1f);
+                    break;
+                }
+        }
+
+        _state = newState;
+    }
+
+    void CorutineForStateChange(float time, float stateGoal, float delay)
+    {
+        if (_stateChangeCo != null) StopCoroutine(_stateChangeCo);
+        _stateChangeCo = StartCoroutine(GoToIdle(time, stateGoal, delay));
+    }
+
+    IEnumerator GoToIdle(float time, float stateGoal, float delay)
+    {
+        float timeCount = delay;
+
+        while(timeCount > 0)
+        {
+            yield return null;
+            timeCount += -Time.deltaTime;
+        }
+
+        timeCount = 0f;
+
+        while (timeCount < time)
+        {
+            float timeRatio = timeCount / time;
+
+            _animator.SetFloat("IdleState", Mathf.Lerp(_animator.GetFloat("IdleState"), stateGoal, timeRatio));
+            _animator.SetFloat("MoveState", Mathf.Lerp(_animator.GetFloat("MoveState"), stateGoal, timeRatio));
+
+            yield return null;
+
+            timeCount += Time.deltaTime;
+        }
+
+        _animator.SetFloat("IdleState", stateGoal);
+        _animator.SetFloat("MoveState", stateGoal);
+    }
+
+    public Transform LeftHand()
+    {
+        return _leftHand;
+    }
+
+    public Transform RightHand()
+    {
+        return _rightHand;
     }
 
     void FootStepSE()
