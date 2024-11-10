@@ -11,14 +11,16 @@ public class ReferenceManager : MonoBehaviour
     [Header("Player")]
     [SerializeField] Script_PlayerController _localPlayer = null;
     [SerializeField] List<Script_PlayerController> _remotePlayers = new();
+    [SerializeField] Transform _aimTranform = null;
 
     public enum Player { local, remote }
 
     [Header("Weapon")]
     [SerializeField] List<Script_Weapon> _weapons = null;
     [SerializeField] List<Script_Fx_Tracker> _muzzleEffect = null;
+    [SerializeField] List<Script_Fx_Tracker> _bulletHoleEffect = null;
 
-    public enum Fx { normal, muzzleEffect }
+    public enum Fx { normal, muzzleEffect, BulletHoleSmoke }
 
     [Header("Layer")]
     [SerializeField] List<layerSetting> _layerSettings = null;
@@ -48,10 +50,8 @@ public class ReferenceManager : MonoBehaviour
         }
     }
 
-    public void PlayMuzzleEffect(Fx type, Transform muzzleTransform)
+    public void PlayEffect(Fx type, Transform destinationTransform)
     {
-        Script_Fx_Tracker ps = null;
-
         switch (type)
         {
             case Fx.normal: break;
@@ -61,7 +61,20 @@ public class ReferenceManager : MonoBehaviour
                     {
                         if (!_muzzleEffect[i].IsPlay())
                         {
-                            ps = _muzzleEffect[i];
+                            _muzzleEffect[i].StartTracking(destinationTransform, 0.2f);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            case Fx.BulletHoleSmoke:
+                {
+                    for (int i = 0; i < _bulletHoleEffect.Count; ++i)
+                    {
+                        if (!_bulletHoleEffect[i].IsPlay())
+                        {
+                            _bulletHoleEffect[i].Play(destinationTransform.position, destinationTransform.forward);
                             break;
                         }
                     }
@@ -69,10 +82,30 @@ public class ReferenceManager : MonoBehaviour
                     break;
                 }
         }
+    }
 
-        if(ps != null)
+    public void PlayEffect(Fx type, Vector3 position, Vector3 forward)
+    {
+        switch (type)
         {
-            ps.StartTracking(muzzleTransform, 0.2f);
+            case Fx.normal: break;
+            case Fx.muzzleEffect:
+                {
+                    break;
+                }
+            case Fx.BulletHoleSmoke:
+                {
+                    for (int i = 0; i < _bulletHoleEffect.Count; ++i)
+                    {
+                        if (!_bulletHoleEffect[i].IsPlay())
+                        {
+                            _bulletHoleEffect[i].Play(position, forward);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
         }
     }
 
@@ -84,6 +117,11 @@ public class ReferenceManager : MonoBehaviour
     public layerSetting GetLayer(Layer type)
     {
         return _layerSettings[(int)type];
+    }
+
+    public Transform GetAim()
+    {
+        return _aimTranform;
     }
 
     void InitLayerSetting()

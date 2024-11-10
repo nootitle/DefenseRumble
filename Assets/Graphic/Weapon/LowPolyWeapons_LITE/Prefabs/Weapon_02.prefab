@@ -192,11 +192,15 @@ MonoBehaviour:
   _fireDamage: 25
   _fireRange: 20
   _attenAlongRange: 1
-  _reactionTimeWhenFire: 1
+  _reactionTimeWhenFire: 0.2
   _localPositionWhenFire: {x: 0.1, y: 0.139, z: 0}
   _localEulerWhenFire: {x: 146.869, y: 324.37, z: 108.131}
   _muzzle: {fileID: 6541917882418585810}
+  _maxAmmo: 30
+  _reloadTime: 3
   _audioSource: {fileID: 9078234930815357993}
+  _fireSE: {fileID: 8300000, guid: 8602b7d5cd15c1943a50aa53f171c8cf, type: 3}
+  _reloadSE: {fileID: 8300000, guid: 3c5c1d4d7b9307c458890a4beb12e4ae, type: 3}
 --- !u!1 &5836183803064680627
 GameObject:
   m_ObjectHideFlags: 0
@@ -555,7 +559,7 @@ Transform:
   m_GameObject: {fileID: 7772008454291902580}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: -0, w: -0.7071068}
-  m_LocalPosition: {x: -0.659, y: 0.08, z: 0}
+  m_LocalPosition: {x: -0.728, y: 0.08, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

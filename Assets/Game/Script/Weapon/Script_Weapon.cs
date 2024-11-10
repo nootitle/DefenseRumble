@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class Script_Weapon : MonoBehaviour
+public abstract class Script_Weapon : MonoBehaviour
 {
     public virtual void Get()
     {
@@ -16,6 +16,21 @@ public class Script_Weapon : MonoBehaviour
     }
 
     public virtual void Use()
+    {
+
+    }
+
+    public virtual bool CanReload()
+    {
+        return true;
+    }
+
+    public virtual void Reload()
+    {
+
+    }
+
+    public virtual void CancelReload()
     {
 
     }

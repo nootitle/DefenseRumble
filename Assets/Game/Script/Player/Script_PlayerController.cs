@@ -53,6 +53,7 @@ public class Script_PlayerController : MonoBehaviour
     {
         Move();
         MouseButton();
+        Weapon_Reload();
     }
 
     void Init()
@@ -84,6 +85,7 @@ public class Script_PlayerController : MonoBehaviour
 
                 _animator.SetBool("IsMove", true);
                 _animator.SetFloat("JumpState", 0.33f);
+                _animator.SetFloat("ReloadState", Mathf.Lerp(_animator.GetFloat("ReloadState"), 0.33f, 5f * Time.deltaTime));
 
                 FootStepSE();
             }
@@ -95,6 +97,7 @@ public class Script_PlayerController : MonoBehaviour
 
                 _animator.SetBool("IsMove", false);
                 _animator.SetFloat("JumpState", 0f);
+                _animator.SetFloat("ReloadState", Mathf.Lerp(_animator.GetFloat("ReloadState"), 0f, 5f * Time.deltaTime));
             }
 
             CoolDown_Jump();
@@ -192,6 +195,15 @@ public class Script_PlayerController : MonoBehaviour
         _weapon.Use();
     }
 
+    void Weapon_Reload()
+    {
+        if(Input.GetKeyDown(KeyCode.R) && _weapon != null && _weapon.CanReload())
+        {
+            StateUpdate(state.reload);
+            _weapon.Reload();
+        }
+    }
+
     void StateUpdate(state newState)
     {
         switch(newState)
@@ -215,9 +227,19 @@ public class Script_PlayerController : MonoBehaviour
                 }
             case state.reload:
                 {
-                    _animator.SetFloat("IdleState", 1f);
-                    _animator.SetFloat("MoveState", 1f);
-                    CorutineForStateChange(1f, 0.33f, 1f);
+                    if (_animator.GetBool("IsMove"))
+                    {
+                        _animator.SetFloat("ReloadState", 0.66f);
+                        CorutineForStateChange(1f, 0.33f, 1f);
+                    }
+                    else
+                    {
+                        _animator.SetFloat("ReloadState", 0.33f);
+                        CorutineForStateChange(1f, 0f, 1f);
+                    }
+
+                    _animator.SetTrigger("Reload");
+
                     break;
                 }
         }

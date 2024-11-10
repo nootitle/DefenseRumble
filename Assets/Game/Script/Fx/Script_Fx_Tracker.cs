@@ -19,7 +19,25 @@ public class Script_Fx_Tracker : MonoBehaviour
     {
         return _particleSystem.isPlaying;
     }
-    
+
+    public void Play(Vector3 position, Vector3 forward)
+    {
+        this.transform.position = position;
+
+        switch (_allignAxis)
+        {
+            case AlignAxis.X: this.transform.right = forward; break;
+            case AlignAxis.Y: this.transform.up = forward; break;
+            case AlignAxis.Z: this.transform.forward = forward; break;
+            case AlignAxis.XR: this.transform.right = -forward; break;
+            case AlignAxis.YR: this.transform.up = -forward; break;
+            case AlignAxis.ZR: this.transform.forward = -forward; break;
+            default: this.transform.forward = forward; break;
+        }
+
+        _particleSystem.Play();
+    }
+
     public void StartTracking(Transform target, float time)
     {
         _trackingTarget = target;
