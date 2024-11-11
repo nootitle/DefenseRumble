@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -9,6 +10,8 @@ public class Script_PlayerController : MonoBehaviour
     [Header("General")]
     [SerializeField] Rigidbody _rigidBody = null;
     [SerializeField] Animator _animator = null;
+    [SerializeField] Script_CameraController _cameraController = null;
+    [SerializeField] Transform _cameraTransform = null;
 
     state _state = state.normal;
 
@@ -17,6 +20,7 @@ public class Script_PlayerController : MonoBehaviour
     Coroutine _stateChangeCo = null;
 
     [Header("Movement")]
+    [SerializeField] float _cameraSpeed = 5f;
     [SerializeField] float _landCheckRadius = 0.25f;
     [SerializeField] float _moveSpeed = 1f;
     [SerializeField] float _maxSpeed = 2f;
@@ -24,6 +28,9 @@ public class Script_PlayerController : MonoBehaviour
     [SerializeField] float _jumpCoolDown = 0.25f;
     [SerializeField] float _rotateSpeed = 1f;
     [SerializeField] Transform _center = null;
+
+    float mouseX = 0f;
+    float mouseY = 0f;
 
     Vector3 _velocity = Vector3.zero;
     Vector3 _velocityBuffer = Vector3.zero;
@@ -67,21 +74,27 @@ public class Script_PlayerController : MonoBehaviour
 
     void Move()
     {
+        mouseX += Input.GetAxis("Mouse X") * _cameraSpeed;
+        mouseY += Input.GetAxis("Mouse Y") * _cameraSpeed;
+        mouseY = Mathf.Clamp(mouseY, -50f, 30f);
+
+        _eulerBuffer.y = mouseX;
+        _eulerBuffer.x = -mouseY;
+
         _isGround = Physics.CheckSphere(this.transform.position, _landCheckRadius, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerShift);
 
         if (_isGround)
         {
-            _velocityBuffer = this.transform.forward;
-            _velocityBuffer.y = 0f;
-            _velocityBuffer.Normalize();
-
             _axis.x = Input.GetAxis("Horizontal");
             _axis.y = Input.GetAxis("Vertical");
 
+            _velocityBuffer = _axis.y * _cameraTransform.forward + _axis.x * _cameraTransform.right;
+            _velocityBuffer.y = 0f;
+            _velocityBuffer.Normalize();
+
             if (_axis != Vector2.zero)
             {
-                _velocity = Vector3.ClampMagnitude(_velocity + _axis.y * _moveSpeed * _velocityBuffer, _maxSpeed);
-                _eulerBuffer.y = _axis.x * Mathf.Rad2Deg * _rotateSpeed;
+                _velocity = Vector3.ClampMagnitude(_velocity + _moveSpeed * _velocityBuffer, _maxSpeed);
 
                 _animator.SetBool("IsMove", true);
                 _animator.SetFloat("JumpState", 0.33f);
@@ -93,7 +106,6 @@ public class Script_PlayerController : MonoBehaviour
             {
                 _velocity.x = 0f;
                 _velocity.z = 0f;
-                _eulerBuffer.y = 0f;
 
                 _animator.SetBool("IsMove", false);
                 _animator.SetFloat("JumpState", 0f);
@@ -127,7 +139,7 @@ public class Script_PlayerController : MonoBehaviour
             _velocity = hit.normal;
         }
 
-        transform.Rotate(_eulerBuffer);
+        this.transform.localEulerAngles = _eulerBuffer;
         transform.position += Time.deltaTime * _velocity;
     }
 
@@ -146,12 +158,20 @@ public class Script_PlayerController : MonoBehaviour
             if (_weapon == null)
                 Weapon_Get();
             else
+            {
+                _cameraController.Zoom(true);
                 Weapon_Use();
+            }
         }
         else if (Input.GetButton("Fire1"))
         {
             if (_weapon != null)
                 Weapon_Use();
+        }
+
+        if(Input.GetButtonUp("Fire1"))
+        {
+            _cameraController.Zoom(false);
         }
 
         if (Input.GetKeyDown(KeyCode.P))

@@ -78,7 +78,7 @@ public class Script_Weapon_M4 : Script_Weapon
 
     void Fire()
     {
-        if (Physics.Raycast(ReferenceManager.instacne.GetAim().position, ReferenceManager.instacne.GetAim().forward, out RaycastHit hit, _fireRange))
+        if (Physics.Raycast(ReferenceManager.instacne.GetAimPoint(), ReferenceManager.instacne.GetAimForward(), out RaycastHit hit, _fireRange))
         {
             if(hit.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.player).layerInt)
             {
@@ -93,7 +93,7 @@ public class Script_Weapon_M4 : Script_Weapon
 
             }
         }
-        else if (Physics.SphereCast(ReferenceManager.instacne.GetAim().position, _bulletRadius, ReferenceManager.instacne.GetAim().forward, out RaycastHit hit2, _fireRange))
+        else if (Physics.SphereCast(ReferenceManager.instacne.GetAimPoint(), _bulletRadius, ReferenceManager.instacne.GetAimForward(), out RaycastHit hit2, _fireRange))
         {
             if (hit2.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.player).layerInt)
             {

@@ -191,6 +191,7 @@ MonoBehaviour:
   _rigidBody: {fileID: 2202603963293139014}
   _fireDamage: 25
   _fireRange: 20
+  _bulletRadius: 0.1
   _attenAlongRange: 1
   _reactionTimeWhenFire: 0.2
   _localPositionWhenFire: {x: 0.1, y: 0.139, z: 0}

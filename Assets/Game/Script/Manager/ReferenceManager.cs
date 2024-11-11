@@ -12,6 +12,7 @@ public class ReferenceManager : MonoBehaviour
     [SerializeField] Script_PlayerController _localPlayer = null;
     [SerializeField] List<Script_PlayerController> _remotePlayers = new();
     [SerializeField] Transform _aimTranform = null;
+    [SerializeField] Transform _camera = null;
 
     public enum Player { local, remote }
 
@@ -119,9 +120,17 @@ public class ReferenceManager : MonoBehaviour
         return _layerSettings[(int)type];
     }
 
-    public Transform GetAim()
+    public Vector3 GetAimPoint()
     {
-        return _aimTranform;
+        return _aimTranform.position;
+
+        //Vector3 point = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,
+                //Input.mousePosition.y, -Camera.main.transform.position.z));
+    }
+
+    public Vector3 GetAimForward()
+    {
+        return _aimTranform.position - _camera.position;
     }
 
     void InitLayerSetting()
