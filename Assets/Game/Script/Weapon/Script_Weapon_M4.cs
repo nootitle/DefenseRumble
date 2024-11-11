@@ -44,9 +44,14 @@ public class Script_Weapon_M4 : Script_Weapon
     {
         _rigidBody.isKinematic = true;
 
-        this.transform.SetParent(ReferenceManager.instacne.GetPlayer(ReferenceManager.Player.local).RightHand());
+        this.transform.SetParent(Script_ReferenceHub.instacne.GetPlayer(Script_ReferenceHub.Player.local).RightHand());
         this.transform.localPosition = _offsetOnHand;
         this.transform.localEulerAngles = _offsetOnEuler;
+
+        if(_currentAmmo > 0)
+            Script_ReferenceHub.instacne.GetUI().SetWeaponSprite(Script_UIManager.WeaponType.M4, Script_UIManager.WeaponImage.yellow);
+        else
+            Script_ReferenceHub.instacne.GetUI().SetWeaponSprite(Script_UIManager.WeaponType.M4, Script_UIManager.WeaponImage.black);
     }
 
     public override void Discard()
@@ -68,42 +73,63 @@ public class Script_Weapon_M4 : Script_Weapon
 
         Fire();
 
-        ReferenceManager.instacne.PlayEffect(ReferenceManager.Fx.muzzleEffect, _muzzle);
+        Script_ReferenceHub.instacne.PlayEffect(Script_ReferenceHub.Fx.muzzleEffect, _muzzle);
 
         _audioSource.clip = _fireSE;
         _audioSource.Play();
 
         --_currentAmmo;
+
+        if(_currentAmmo <= 0)
+            Script_ReferenceHub.instacne.GetUI().SetWeaponSprite(Script_UIManager.WeaponType.M4, Script_UIManager.WeaponImage.black);
     }
 
     void Fire()
     {
-        if (Physics.Raycast(ReferenceManager.instacne.GetAimPoint(), ReferenceManager.instacne.GetAimForward(), out RaycastHit hit, _fireRange))
+        if (Physics.Raycast(Script_ReferenceHub.instacne.GetAimPoint(), Script_ReferenceHub.instacne.GetAimForward(), out RaycastHit hit, _fireRange))
         {
-            if(hit.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.player).layerInt)
+            if (hit.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.enemy).layerInt)
+            {
+                Script_Enemy SE = hit.transform.GetComponent<Script_Enemy>();
+     
+                if (SE != null && SE.spawned)
+                {
+                    SE.Hit();
+                }
+            }
+            else if (hit.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.player).layerInt)
             {
 
             }
-            else if (hit.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerInt)
+            else if (hit.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerInt)
             {
-                ReferenceManager.instacne.PlayEffect(ReferenceManager.Fx.BulletHoleSmoke, hit.point, hit.normal);
+                Script_ReferenceHub.instacne.PlayEffect(Script_ReferenceHub.Fx.bulletHoleSmoke, hit.point, hit.normal);
             }
-            else if (hit.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.weapon).layerInt)
+            else if (hit.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.weapon).layerInt)
             {
 
             }
         }
-        else if (Physics.SphereCast(ReferenceManager.instacne.GetAimPoint(), _bulletRadius, ReferenceManager.instacne.GetAimForward(), out RaycastHit hit2, _fireRange))
+        else if (Physics.SphereCast(Script_ReferenceHub.instacne.GetAimPoint(), _bulletRadius, Script_ReferenceHub.instacne.GetAimForward(), out RaycastHit hit2, _fireRange))
         {
-            if (hit2.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.player).layerInt)
+            if (hit2.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.enemy).layerInt)
+            {
+                Script_Enemy SE = hit2.transform.GetComponent<Script_Enemy>();
+   
+                if (SE != null && SE.spawned)
+                {
+                    SE.Hit();
+                }
+            }
+            else if (hit2.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.player).layerInt)
             {
 
             }
-            else if (hit2.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerInt)
+            else if (hit2.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerInt)
             {
-                ReferenceManager.instacne.PlayEffect(ReferenceManager.Fx.BulletHoleSmoke, hit2.point, hit2.normal);
+                Script_ReferenceHub.instacne.PlayEffect(Script_ReferenceHub.Fx.bulletHoleSmoke, hit2.point, hit2.normal);
             }
-            else if (hit2.collider.gameObject.layer == ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.weapon).layerInt)
+            else if (hit2.collider.gameObject.layer == Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.weapon).layerInt)
             {
 
             }
@@ -145,6 +171,8 @@ public class Script_Weapon_M4 : Script_Weapon
 
             timeCount += Time.deltaTime;
         }
+
+        Script_ReferenceHub.instacne.GetUI().SetWeaponSprite(Script_UIManager.WeaponType.M4, Script_UIManager.WeaponImage.yellow);
 
         _currentAmmo = _maxAmmo;
         _reloading = false;

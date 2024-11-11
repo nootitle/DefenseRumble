@@ -1,9 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class Script_PlayerController : MonoBehaviour
 {
@@ -34,7 +31,7 @@ public class Script_PlayerController : MonoBehaviour
 
     Vector3 _velocity = Vector3.zero;
     Vector3 _velocityBuffer = Vector3.zero;
-    Vector3 _eulerBuffer= Vector3.zero;
+    Vector3 _eulerBuffer = Vector3.zero;
     Vector2 _axis = Vector2.zero;
 
     float _jumpCoolDownCount = 0f;
@@ -49,7 +46,9 @@ public class Script_PlayerController : MonoBehaviour
 
     [Header("Sound")]
     [SerializeField] AudioSource _audioSource = null;
+    [SerializeField] AudioSource _audioSource_hit = null;
     [SerializeField] List<AudioClip> _footStepSE = null;
+    [SerializeField] List<AudioClip> _hitSE = null;
 
     void Start()
     {
@@ -65,7 +64,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void Init()
     {
-        if(_rigidBody ==  null)
+        if (_rigidBody == null)
             _rigidBody = GetComponent<Rigidbody>();
 
         if (_animator == null)
@@ -81,7 +80,7 @@ public class Script_PlayerController : MonoBehaviour
         _eulerBuffer.y = mouseX;
         _eulerBuffer.x = -mouseY;
 
-        _isGround = Physics.CheckSphere(this.transform.position, _landCheckRadius, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerShift);
+        _isGround = Physics.CheckSphere(this.transform.position, _landCheckRadius, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerShift);
 
         if (_isGround)
         {
@@ -134,7 +133,7 @@ public class Script_PlayerController : MonoBehaviour
         XZ.y = 0f;
 
         if (Physics.SphereCast(_center.position, _landCheckRadius, XZ.normalized, out RaycastHit hit,
-            1f, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.staticObject).layerShift))
+            1f, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerShift))
         {
             _velocity = hit.normal;
         }
@@ -145,7 +144,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void CoolDown_Jump()
     {
-        if(_jumpCoolDownCount < _jumpCoolDown)
+        if (_jumpCoolDownCount < _jumpCoolDown)
         {
             _jumpCoolDownCount += Time.deltaTime;
         }
@@ -153,7 +152,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void MouseButton()
     {
-        if(Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1"))
         {
             if (_weapon == null)
                 Weapon_Get();
@@ -169,7 +168,7 @@ public class Script_PlayerController : MonoBehaviour
                 Weapon_Use();
         }
 
-        if(Input.GetButtonUp("Fire1"))
+        if (Input.GetButtonUp("Fire1"))
         {
             _cameraController.Zoom(false);
         }
@@ -182,7 +181,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void Weapon_Get()
     {
-        Collider[] weapons = Physics.OverlapSphere(RightHand().position, _grabRadius_Weapon, ReferenceManager.instacne.GetLayer(ReferenceManager.Layer.weapon).layerShift);
+        Collider[] weapons = Physics.OverlapSphere(RightHand().position, _grabRadius_Weapon, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.weapon).layerShift);
 
         foreach (Collider w in weapons)
         {
@@ -205,6 +204,8 @@ public class Script_PlayerController : MonoBehaviour
         _weapon.Discard();
         _weapon = null;
 
+        Script_ReferenceHub.instacne.GetUI().SetWeaponSprite(Script_UIManager.WeaponType.none, Script_UIManager.WeaponImage.black);
+
         StateUpdate(state.normal);
     }
 
@@ -217,7 +218,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void Weapon_Reload()
     {
-        if(Input.GetKeyDown(KeyCode.R) && _weapon != null && _weapon.CanReload())
+        if (Input.GetKeyDown(KeyCode.R) && _weapon != null && _weapon.CanReload())
         {
             StateUpdate(state.reload);
             _weapon.Reload();
@@ -226,7 +227,7 @@ public class Script_PlayerController : MonoBehaviour
 
     void StateUpdate(state newState)
     {
-        switch(newState)
+        switch (newState)
         {
             case state.normal:
                 {
@@ -277,7 +278,7 @@ public class Script_PlayerController : MonoBehaviour
     {
         float timeCount = delay;
 
-        while(timeCount > 0)
+        while (timeCount > 0)
         {
             yield return null;
             timeCount += -Time.deltaTime;
@@ -299,6 +300,12 @@ public class Script_PlayerController : MonoBehaviour
 
         _animator.SetFloat("IdleState", stateGoal);
         _animator.SetFloat("MoveState", stateGoal);
+    }
+
+    public void Hit()
+    {
+        _audioSource_hit.clip = _hitSE[UnityEngine.Random.Range(0, _hitSE.Count)];
+        _audioSource_hit.Play();
     }
 
     public Transform LeftHand()
