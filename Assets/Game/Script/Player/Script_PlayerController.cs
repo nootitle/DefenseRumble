@@ -24,7 +24,7 @@ public class Script_PlayerController : MonoBehaviour
     [SerializeField] float _jumpSpeed = 5f;
     [SerializeField] float _jumpCoolDown = 0.25f;
     [SerializeField] float _rotateSpeed = 1f;
-    [SerializeField] Transform _center = null;
+    [SerializeField] Transform _head = null;
 
     float mouseX = 0f;
     float mouseY = 0f;
@@ -69,18 +69,35 @@ public class Script_PlayerController : MonoBehaviour
 
         if (_animator == null)
             _animator = GetComponent<Animator>();
+
+        if(_weapon == null)
+            _animator.SetFloat("JumpState", 0f);
+        else
+            _animator.SetFloat("JumpState", 0.33f);
     }
 
     void Move()
     {
         mouseX += Input.GetAxis("Mouse X") * _cameraSpeed;
         mouseY += Input.GetAxis("Mouse Y") * _cameraSpeed;
-        mouseY = Mathf.Clamp(mouseY, -50f, 30f);
+        mouseY = Mathf.Clamp(mouseY, -30f, 30f);
 
         _eulerBuffer.y = mouseX;
         _eulerBuffer.x = -mouseY;
 
         _isGround = Physics.CheckSphere(this.transform.position, _landCheckRadius, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerShift);
+
+        if(_isGround)
+        {
+            if (Physics.Raycast(this.transform.position, Vector3.down, out RaycastHit gHit, _landCheckRadius, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerShift))
+            {
+                _isGround = gHit.normal.y > 0f;
+            }
+            else
+            {
+                _isGround = false;
+            }    
+        }
 
         if (_isGround)
         {
@@ -96,7 +113,6 @@ public class Script_PlayerController : MonoBehaviour
                 _velocity = Vector3.ClampMagnitude(_velocity + _moveSpeed * _velocityBuffer, _maxSpeed);
 
                 _animator.SetBool("IsMove", true);
-                _animator.SetFloat("JumpState", 0.33f);
                 _animator.SetFloat("ReloadState", Mathf.Lerp(_animator.GetFloat("ReloadState"), 0.33f, 5f * Time.deltaTime));
 
                 FootStepSE();
@@ -107,7 +123,6 @@ public class Script_PlayerController : MonoBehaviour
                 _velocity.z = 0f;
 
                 _animator.SetBool("IsMove", false);
-                _animator.SetFloat("JumpState", 0f);
                 _animator.SetFloat("ReloadState", Mathf.Lerp(_animator.GetFloat("ReloadState"), 0f, 5f * Time.deltaTime));
             }
 
@@ -129,16 +144,23 @@ public class Script_PlayerController : MonoBehaviour
             _animator.SetTrigger("Jump");
         }
 
-        Vector3 XZ = _velocity;
-        XZ.y = 0f;
+        this.transform.localEulerAngles = _eulerBuffer;
 
-        if (Physics.SphereCast(_center.position, _landCheckRadius, XZ.normalized, out RaycastHit hit,
+        Vector3 XZ = _velocity;
+        if(XZ.y < 0f)
+            XZ.y = 0f;
+
+        if (Physics.SphereCast(this.transform.position, 0.1f, XZ.normalized, out RaycastHit hit,
             1f, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerShift))
         {
             _velocity = hit.normal;
         }
+        else if (Physics.SphereCast(_head.position, 0.1f, XZ.normalized, out RaycastHit hit2,
+            0.5f, Script_ReferenceHub.instacne.GetLayer(Script_ReferenceHub.Layer.staticObject).layerShift))
+        {
+            _velocity = Vector3.zero;
+        }
 
-        this.transform.localEulerAngles = _eulerBuffer;
         transform.position += Time.deltaTime * _velocity;
     }
 
@@ -195,6 +217,8 @@ public class Script_PlayerController : MonoBehaviour
                 StateUpdate(state.run);
             }
         }
+
+        _animator.SetFloat("JumpState", 0.33f);
     }
 
     void Weapon_Discard()
@@ -203,6 +227,8 @@ public class Script_PlayerController : MonoBehaviour
 
         _weapon.Discard();
         _weapon = null;
+
+        _animator.SetFloat("JumpState", 0f);
 
         Script_ReferenceHub.instacne.GetUI().SetWeaponSprite(Script_UIManager.WeaponType.none, Script_UIManager.WeaponImage.black);
 
@@ -231,12 +257,18 @@ public class Script_PlayerController : MonoBehaviour
         {
             case state.normal:
                 {
-                    CorutineForStateChange(0.15f, 0f, 0f);
+                    if(_weapon == null)
+                        CorutineForStateChange(0.15f, 0f, 0f);
+                    else
+                        CorutineForStateChange(0.15f, 0.33f, 0f);
                     break;
                 }
             case state.run:
                 {
-                    CorutineForStateChange(1f, 0.33f, 0f);
+                    if (_weapon == null)
+                        CorutineForStateChange(0.15f, 0f, 0f);
+                    else
+                        CorutineForStateChange(0.15f, 0.33f, 0f);
                     break;
                 }
             case state.fire:

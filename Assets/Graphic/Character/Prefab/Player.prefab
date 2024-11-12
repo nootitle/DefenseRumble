@@ -393,9 +393,9 @@ MonoBehaviour:
   _moveSpeed: 3
   _maxSpeed: 5
   _jumpSpeed: 5
-  _jumpCoolDown: 0.25
+  _jumpCoolDown: 0.5
   _rotateSpeed: 0.02
-  _center: {fileID: 4043913610375910190}
+  _head: {fileID: 2759272724555879082}
   _rightHand: {fileID: 7933478512004978698}
   _leftHand: {fileID: 3283309609200726529}
   _grabRadius_Weapon: 2
@@ -977,15 +977,15 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 8167137724878424824}
   m_SourcePrefab: {fileID: 100100000, guid: 445ea17a0caee3745953dde1847368ce, type: 3}
---- !u!4 &3283309609200726529 stripped
+--- !u!4 &2759272724555879082 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 6502182839619065283, guid: 445ea17a0caee3745953dde1847368ce,
+  m_CorrespondingSourceObject: {fileID: -3321919801592875672, guid: 445ea17a0caee3745953dde1847368ce,
     type: 3}
   m_PrefabInstance: {fileID: 8623492125304793026}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &4043913610375910190 stripped
+--- !u!4 &3283309609200726529 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: -3480699329000672020, guid: 445ea17a0caee3745953dde1847368ce,
+  m_CorrespondingSourceObject: {fileID: 6502182839619065283, guid: 445ea17a0caee3745953dde1847368ce,
     type: 3}
   m_PrefabInstance: {fileID: 8623492125304793026}
   m_PrefabAsset: {fileID: 0}
